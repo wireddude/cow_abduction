@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Cow Abduction</title>
-  <meta name="description" content="Cow Abduction — fly a shiny saucer over a moonlit farm and beam cows and neighbors aboard." />
+  <meta name="description" content="Cow Abduction — fly a paper saucer over a moonlit farm and beam cows and neighbors aboard." />
   <meta name="theme-color" content="#070b16" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -421,7 +421,7 @@
         <circle cx="74" cy="30" r="3" fill="#66bbff"/>
       </svg>
       <h1>COW<br><span>ABDUCTION</span></h1>
-      <p class="sub">A shiny saucer. A moonlit farm. A tractor beam with excellent manners.</p>
+      <p class="sub">A paper saucer. A moonlit farm. A tractor beam with excellent manners.</p>
       <ul class="help">
         <li>Fly with the pad, or with WASD / arrow keys.</li>
         <li>Hold BEAM, Space, or B. Cows and people in the ring float up into the saucer.</li>
@@ -648,72 +648,6 @@ function flat(geo, hex) {
 // Characters are unlit cutouts so their colors stay paper-flat at night.
 function cutout(geo, hex, opts = {}) {
   return paper(geo, hex, { ...opts, flat: true });
-}
-
-function makeEnv() {
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const envScene = new THREE.Scene();
-  envScene.add(new THREE.Mesh(
-    new THREE.SphereGeometry(14, 24, 16),
-    new THREE.MeshBasicMaterial({ color: 0xd5e0ec, side: THREE.BackSide })
-  ));
-  const moonDisc = new THREE.Mesh(
-    new THREE.CircleGeometry(3.2, 24),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
-  );
-  moonDisc.position.set(-5, 6, -9);
-  moonDisc.lookAt(0, 0, 0);
-  envScene.add(moonDisc);
-  const groundDisc = new THREE.Mesh(
-    new THREE.CircleGeometry(11, 24),
-    new THREE.MeshBasicMaterial({ color: 0x8ea894 })
-  );
-  groundDisc.rotation.x = -Math.PI / 2;
-  groundDisc.position.y = -4.5;
-  envScene.add(groundDisc);
-  const warm = new THREE.Mesh(
-    new THREE.CircleGeometry(1.4, 16),
-    new THREE.MeshBasicMaterial({ color: 0xffb06a })
-  );
-  warm.position.set(4, -0.5, 7);
-  warm.lookAt(0, 0, 0);
-  envScene.add(warm);
-  const target = pmrem.fromScene(envScene, 0.04);
-  pmrem.dispose();
-  return target.texture;
-}
-
-let silver;
-let glass;
-try {
-  scene.environment = makeEnv();
-  silver = new THREE.MeshPhysicalMaterial({
-    color: 0xf3f6fa,
-    metalness: 0.58,
-    roughness: 0.22,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
-    emissive: 0x8b98a8,
-    emissiveIntensity: 0.28,
-    envMapIntensity: 0.85,
-  });
-  glass = new THREE.MeshStandardMaterial({
-    color: 0xb5dcff,
-    metalness: 0.55,
-    roughness: 0.06,
-    emissive: 0x163e6e,
-    emissiveIntensity: 0.7,
-    envMapIntensity: 1.2,
-  });
-} catch (err) {
-  silver = new THREE.MeshStandardMaterial({
-    color: 0xe7eef6,
-    metalness: 0.35,
-    roughness: 0.22,
-    emissive: 0xc5d0dc,
-    emissiveIntensity: 0.35,
-  });
-  glass = silver;
 }
 
 function skyTexture() {
@@ -1184,82 +1118,82 @@ scene.traverse((obj) => {
 });
 
 // --- Saucer -----------------------------------------------------------------
+// Same paper cutouts as the farm: flat colors, simple facets, bold ink.
 const ship = { x: 0, z: 14, y: HOVER_Y, vx: 0, vz: 0, group: new THREE.Group() };
 scene.add(ship.group);
 
-const profile = [
-  [0.00, -0.42], [0.70, -0.62], [1.40, -0.40], [2.40, -0.16],
-  [3.40, -0.05], [4.20, 0.00], [4.32, 0.10], [4.20, 0.20],
-  [3.30, 0.24], [2.20, 0.20], [1.55, 0.28], [1.40, 0.55],
-  [1.20, 0.90], [0.85, 1.18], [0.40, 1.36], [0.00, 1.42],
-].map(([x, y]) => new THREE.Vector2(x, y));
-const hull = new THREE.Mesh(new THREE.LatheGeometry(profile, 56), silver);
-hull.castShadow = true;
-hull.receiveShadow = true;
-ship.group.add(hull);
+function cutoutUnique(geo, hex, opts = {}) {
+  const material = new THREE.MeshBasicMaterial({ color: hex });
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.castShadow = opts.shadow !== false;
+  mesh.receiveShadow = false;
+  if (opts.ink !== false) {
+    const outline = new THREE.Mesh(geo, inkMat);
+    outline.scale.setScalar(opts.inkScale ?? 1.055);
+    outline.castShadow = false;
+    outline.receiveShadow = false;
+    mesh.add(outline);
+  }
+  return mesh;
+}
+function shadeHex(hex, amount) {
+  return new THREE.Color(hex).multiplyScalar(amount).getHex();
+}
 
-const domeBand = new THREE.Mesh(
-  new THREE.TorusGeometry(1.36, 0.075, 8, 28),
-  new THREE.MeshStandardMaterial({ color: 0x1c2836, metalness: 0.7, roughness: 0.28, envMapIntensity: 1 })
+const disc = cutout(new THREE.CylinderGeometry(4.15, 4.35, 0.38, 16), 0xf4f7fb, { inkScale: 1.035 });
+disc.position.y = 0.08;
+ship.group.add(disc);
+const under = cutout(new THREE.CylinderGeometry(2.55, 3.45, 0.22, 14), 0xb7c3d0, { inkScale: 1.04 });
+under.position.y = -0.2;
+ship.group.add(under);
+const dome = cutout(
+  new THREE.SphereGeometry(1.22, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+  0xd5e6f6,
+  { inkScale: 1.045 }
 );
-domeBand.rotation.x = Math.PI / 2;
-domeBand.position.y = 0.5;
-ship.group.add(domeBand);
+dome.position.y = 0.24;
+ship.group.add(dome);
+const collar = cutout(new THREE.CylinderGeometry(1.26, 1.34, 0.16, 8), 0x243040, { inkScale: 1.06 });
+collar.position.y = 0.32;
+ship.group.add(collar);
 
-for (let i = 0; i < 8; i++) {
-  const angle = (i / 8) * Math.PI * 2;
-  const windowPane = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8), glass);
-  windowPane.position.set(Math.cos(angle) * 1.22, 0.9, Math.sin(angle) * 1.22);
-  windowPane.scale.set(1.15, 0.72, 0.55);
-  windowPane.lookAt(Math.cos(angle) * 4, 0.9, Math.sin(angle) * 4);
-  ship.group.add(windowPane);
+for (let i = 0; i < 6; i++) {
+  const angle = (i / 6) * Math.PI * 2;
+  const pane = cutout(new THREE.SphereGeometry(0.16, 6, 5), 0x7ec8ea, { inkScale: 1.14, shadow: false });
+  pane.scale.set(1.25, 0.72, 0.5);
+  pane.position.set(Math.cos(angle) * 1.02, 0.86, Math.sin(angle) * 1.02);
+  ship.group.add(pane);
 }
 
 const rimLightMeshes = [];
 const rimColors = [0xff3355, 0xffcc44, 0x3dffb0, 0x66ccff];
-for (let i = 0; i < 14; i++) {
-  const angle = (i / 14) * Math.PI * 2;
-  const material = new THREE.MeshStandardMaterial({
-    color: 0x141414,
-    emissive: rimColors[i % rimColors.length],
-    emissiveIntensity: 1,
-    roughness: 0.35,
-    metalness: 0.15,
-  });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), material);
-  bulb.position.set(Math.cos(angle) * 4.28, 0.12, Math.sin(angle) * 4.28);
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2;
+  const hex = rimColors[i % rimColors.length];
+  const bulb = cutoutUnique(new THREE.SphereGeometry(0.18, 6, 5), hex, { inkScale: 1.16, shadow: false });
+  bulb.position.set(Math.cos(angle) * 4.22, 0.1, Math.sin(angle) * 4.22);
+  bulb.userData.on = hex;
+  bulb.userData.off = shadeHex(hex, 0.38);
   ship.group.add(bulb);
   rimLightMeshes.push(bulb);
 }
 
-const lip = new THREE.Mesh(new THREE.TorusGeometry(4.28, 0.055, 8, 40), silver);
-lip.rotation.x = Math.PI / 2;
-lip.position.y = 0.1;
-ship.group.add(lip);
-
-const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.55, 8), silver);
-mast.position.y = 1.72;
+const mast = cutout(new THREE.CylinderGeometry(0.05, 0.05, 0.48, 6), 0xd5dde6, { inkScale: 1.25, shadow: false });
+mast.position.y = 1.68;
 ship.group.add(mast);
-const blinkerMat = new THREE.MeshStandardMaterial({
-  color: 0x2a0a10, emissive: 0xff2244, emissiveIntensity: 1, roughness: 0.4,
-});
-const blinker = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), blinkerMat);
-blinker.position.y = 2.04;
+const blinker = cutoutUnique(new THREE.SphereGeometry(0.12, 6, 5), 0xff3355, { inkScale: 1.18, shadow: false });
+blinker.position.y = 1.98;
 ship.group.add(blinker);
+const blinkerMat = blinker.material;
 
-const bellyMat = new THREE.MeshStandardMaterial({
-  color: 0xe9fff8,
-  emissive: 0x67ffe4,
-  emissiveIntensity: 0.45,
-  metalness: 0.25,
-  roughness: 0.22,
-});
-const belly = new THREE.Mesh(
-  new THREE.SphereGeometry(0.62, 18, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
-  bellyMat
+const belly = cutoutUnique(
+  new THREE.SphereGeometry(0.55, 8, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2),
+  0x9ee8dc,
+  { inkScale: 1.08 }
 );
-belly.position.y = -0.5;
+belly.position.y = -0.28;
 ship.group.add(belly);
+const bellyMat = belly.material;
 const bellyLight = new THREE.PointLight(0xb8fff2, 0.15, 18, 2);
 bellyLight.position.set(0, -1.1, 0);
 ship.group.add(bellyLight);
@@ -2024,7 +1958,8 @@ function updateBeam(time) {
   }
   if (!on) {
     motes.forEach((mote) => { mote.visible = false; });
-    bellyMat.emissiveIntensity = 0.35 + Math.sin(time * 3) * 0.08;
+    bellyMat.color.setHex(0x9ed9cf);
+    belly.scale.setScalar(1);
     bellyLight.intensity = 0.2;
     setHum(false);
     return;
@@ -2036,7 +1971,8 @@ function updateBeam(time) {
   beamTex.offset.y = -time * 1.1;
   beamMesh.rotation.y = time * 0.6;
   catchDisc.position.set(ship.x, 0.09, ship.z);
-  bellyMat.emissiveIntensity = 1.8 + Math.sin(time * 22) * 0.35;
+  bellyMat.color.setHex(Math.sin(time * 22) > 0 ? 0xf4fffc : 0xc8fff2);
+  belly.scale.setScalar(1.08);
   bellyLight.intensity = 4.5;
   setHum(true);
   motes.forEach((mote) => {
@@ -2071,11 +2007,11 @@ function updateAmbience(dt, time) {
   });
   rimLightMeshes.forEach((bulb, i) => {
     const wave = Math.sin(time * 4.2 - i * 0.48);
-    bulb.material.emissiveIntensity = wave > 0 ? 2.4 : 0.12;
-    const s = wave > 0 ? 1.2 : 0.82;
-    bulb.scale.setScalar(s);
+    const on = wave > 0;
+    bulb.material.color.setHex(on ? bulb.userData.on : bulb.userData.off);
+    bulb.scale.setScalar(on ? 1.18 : 0.82);
   });
-  blinkerMat.emissiveIntensity = Math.sin(time * 5.5) > 0.2 ? 2.5 : 0.15;
+  blinkerMat.color.setHex(Math.sin(time * 5.5) > 0.2 ? 0xff3355 : 0x7a2434);
   if (mode === 'play') {
     const elapsed = time - playStart;
     if (!hintEl.hidden && (score.cows + score.people > 0 || elapsed > 12)) hintEl.hidden = true;

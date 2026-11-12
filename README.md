@@ -1,6 +1,6 @@
 # Cow Abduction
 
-A family-friendly flying-saucer game for phones, tablets, and desktop. Pilot a shiny 1950s flying disc over one moonlit farm and lift cows and neighbors aboard with a tractor beam.
+A family-friendly flying-saucer game for phones, tablets, and desktop. Pilot a paper silver flying disc over one moonlit farm and lift cows and neighbors aboard with a tractor beam.
 
 This is a first playable version. There is one farm, the visitors only wander, and there is no combat. Enemies and strategy are intentionally left open.
 
@@ -31,7 +31,7 @@ When everyone is aboard, the night ends. Play again to bring the farm back.
 ## In this version
 
 - One night farm: fields, a dirt track, a barn, a farmhouse, a silo, fences, a pond, trees, and a garden.
-- A silver flying disc with a dome and rim lights. It hovers, it does not fight.
+- A paper silver flying disc with a dome and rim lights, drawn in the same flat cutout shapes as the farm. It hovers, it does not fight.
 - Cows and people wander their parts of the farm. They do not chase, dodge, or attack.
 
 ## Extending
